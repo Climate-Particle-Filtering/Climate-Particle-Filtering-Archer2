@@ -1,0 +1,8 @@
+2022-07-26 14:32:36,801 - tool - DEBUG - Logging configured
+2022-07-26 14:32:36,802 - tool - DEBUG - Logging configured
+2022-07-26 14:32:36,803 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-07-26 14:32:37,084 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "POST /geosmeta/activities HTTP/1.1" 201 412
+2022-07-26 14:32:37,086 - tool - DEBUG - Logging configured
+2022-07-26 14:32:37,086 - tool - DEBUG - Logging configured
+2022-07-26 14:32:37,087 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-07-26 14:32:37,198 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "POST /geosmeta/activities HTTP/1.1" 201 412
