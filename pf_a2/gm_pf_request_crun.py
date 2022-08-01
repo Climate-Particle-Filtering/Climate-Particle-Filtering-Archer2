@@ -2,6 +2,16 @@
 #
 # Copyright (c) The University of Edinburgh, 2014.
 #
+"""
+A script used in Particle filtering
+Run on archer2 to cause a request to be sent via GeosMeta for a suite to be
+restarted.
+Resart happens on pumatest.
+In effect this is an interim souoltion until we can ssh directly from 
+archer2 to pumatest, when that will replace this code.
+
+Invoked from send req task in the outer suite - that controls particle filtering
+"""
 from geosmeta import GeosMETA
 import argparse
 import sys

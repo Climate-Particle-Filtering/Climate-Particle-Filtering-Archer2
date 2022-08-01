@@ -34,6 +34,8 @@ export ROSE_VERSION={{ROSE_VERSION}}
             PF_BASE_SUITE = {{ PF_BASE_SUITE }} 
             PF_ENS_SIZE = {{ PF_ENS_SIZE }} 
             PF_ENS_DIR = {{ PF_ENS_DIR }} 
+            PF_RUNLEN_STEP = {{ PF_RUNLEN_STEP }} 
+            PF_RUNLEN_END = {{ PF_RUNLEN_END }} 
             PFname=$(basename $PF_ENS_DIR )
             PF_ENS_PREFIX = ${PFname:0:2}
      [[HPC_ALL]] 
@@ -69,6 +71,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
     [[sendreq]]
         inherit = HPC_SERIAL
         script = """
+                 #set -x
                  hostname
                  echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
                    # PF setup??
@@ -76,26 +79,44 @@ export ROSE_VERSION={{ROSE_VERSION}}
                          # scan run directories to find runs needing a cloned base suite
                  if [[ -d ${PF_ENS_DIR} ]]
                  then
-                      echo A2R=$({{PF_GET_RUNS}} ${PF_ENS_DIR})
-                     echo A2R: $A2R
-                     A2R=""
-                     if [[ x${A2R} != x ]] 
-                     then
-                           for ia in ${A2R}
-                           do
-                              #PF_STUDY=$(basename {{PF_ENS_DIR}})
+                    nqd=$(find ${PF_ENS_DIR} -name "state.QUEUED" | wc -l)
+                    echo  "nqd" ${nqd}
+                    nrun=$(find ${PF_ENS_DIR} -name "state.RUNNING" | wc -l)
+                    echo  "nrun" ${nrun}
+                    ndone=$(find ${PF_ENS_DIR} -name "state.DONE" | wc -l)
+                    echo  "ndone" $ndone
 
-                              echo {{PF_SEND_RUNS}} -b {{PF_BASE_SUITE}} -D {{PF_ENS_DIR}} -s {{PF_STUDY}} -r ${ia}
-#                             # {{PF_SEND_RUNS}} -b {{PF_BASE_SUITE}} -D {{PF_ENS_DIR}} -s {{PF_STUDY}} -r ${ia} 
-                            #  touch {{OPT_STUDY_DIR}}/${ia}/state".QUEUED"
-                           done
+                    if [[ ${nqd} == 0 ]] &&  [[ ${nrun} == 0 ]] && [[ ${ndone} > 0 ]]
+                    then
+                               # ready to filter dumps.
+                        echo pf_reset_dumps.sh  ${PF_ENS_DIR}
+                        {{GM_A2_APP}}/pf_reset_dumps.sh  ${PF_ENS_DIR}
+                        if [[ $? != 0 ]]
+                        then
+                            echo reset of dumps failed
+                            exit 1
+                        fi
+                        echo "requesting restart" >> ${PF_ENS_DIR}/pf.log
+                        for j in $(find ${PF_ENS_DIR} -name "state.CRUN_READY")
+                        do
+                            sname=$(basename $(dirname $j))
+                            echo {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname
+                            {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname
+                            touch ${PF_ENS_DIR}/${sname}/"state.QUEUED"
+                            rm -f ${PF_ENS_DIR}/${sname}/"state.DONE" 
+                             echo "            request for " ${sname} >> ${PF_ENS_DIR}/pf.log
+                        done
                      else
-                      echo null in A2R
+                      echo "did anything start at all?"
+                      echo "nQueued = $nqd"
+                      echo "nrun = $nrun"
+                      echo "ndone = $ndone"
+                      echo testing without models running?
                      fi
                  else
                      echo no PF dir exists
                      exit 1
-                 fi # may be called before stdydir ecsts,.
+                 fi 
 
         """
         [[[job]]]
@@ -108,23 +129,19 @@ export ROSE_VERSION={{ROSE_VERSION}}
             ROSE_TASK_OPTIONS = --ignore-lock
 
     [[startclones]]
-               # clone and start ech model in the ensemble using the stub directory name, zd001
+        # Run on PUMATEST to clone and start each suite for this ensemble.
+        # User responsibility: 
+        #   never trying to do more runs than we have quota/queue space for.
+        #   Can redirect model runs to taskfarm queue
+
         inherit = LINUX
         script = """
                  echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
-                   # PF setup??
-                 i=0
-                 while [[ $i -lt ${PF_ENS_SIZE} ]]
+                 i=1
+                 while [[ $i -le ${PF_ENS_SIZE} ]]
                  do
                     new_suite=${PF_ENS_PREFIX}$(printf "%03d" $i)
                     rundir=${PF_ENS_DIR}/${new_suite}   # archer2 directory for the run
-                          # start the suite for this run.
-                          # never trying to do more runs than we have quota/queue space for.
-                          # how does user perturb runs - prerun task in model suite.
-                          # in optclim we had to wait to know wht runs are needed - here 
-                          # its simpler - just kn ow hte ensemble size so start them then
-                          # wait for their completion and readiness for continuation run.
-
                     cd /home/$USER/roses
 
                     if [[ -d $new_suite ]]
@@ -134,16 +151,17 @@ export ROSE_VERSION={{ROSE_VERSION}}
 
                             new_suite=${new_suite}_$$
                     fi 
-                    cp -r $PF_BASE_SUITE  $new_suite
+
+                    cp -r -L  $PF_BASE_SUITE  $new_suite
                     cd $new_suite
 
                
                    df1="PF_RUNDIR='"${rundir}"'"
                    df2="PF_ENS_DIR='"${PF_ENS_DIR}"'"
+                   echo new suite  $new_suite
                    echo rose suite-run --no-gcontrol --define-suite="${df1}" --define-suite="${df2}"
                    rose suite-run --no-gcontrol --define-suite="${df1}" --define-suite="${df2}"
 
-                    cd /home/$USER/roses
                     ((i = i + 1 )) 
                  done
         """
@@ -159,8 +177,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
         inherit = LINUX
         script = """
                  . {{GEOSM_SETUP_PUMA}}
-                 PF_STUDY=$(basename {{PF_ENS_DIR}})
-                 {{PF_PUMA_RECV_AND_CLONE}} -s {{PF_STUDY}} -C /home/mjm/geosmeta.cfg
+                 {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "${PF_RUNLEN_STEP}"  "${PF_RUNLEN_END}"
         """
         [[[job]]]
             execution time limit = PT20M

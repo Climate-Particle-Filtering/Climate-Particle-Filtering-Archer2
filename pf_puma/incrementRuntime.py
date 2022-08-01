@@ -19,17 +19,23 @@ def editRunLen(suitename, incrementRun, endRun):
     fin=open(oldFile,"r")
 
     for line in fin:
+
        if line.startswith("RUNLEN="):
+           currentend=line.split("=")[1].split(",")
+
+           if  atEnd(currentend, endRun.split(",")):
+              print("already reached end time so cause stop")
+              return False # cant continue
+           
            nextend=doIncrement(line.split("=")[1].split(","), incrementRun.split(","))
-           if  atEnd(nextend, endRun.split(",")):
-              return 1
            edline="RUNLEN=%s,%s,%s,%s,%s,%s\n" %(nextend[0], nextend[1],nextend[2], nextend[3], nextend[4],nextend[5])
            fout.write(edline) 
+           print("new end run time is %s"%edline)
        else:
           fout.write(line)
     fin.close()
     fout.close()
-    return 0
+    return True # continue
 
 def doIncrement ( runarray, inarray):
    rundata=list(map(int,runarray))
@@ -53,17 +59,15 @@ def doIncrement ( runarray, inarray):
    if newdata[1] >12:
        newdata[0]+=1
        newdata[1]-=12
-   print "newdata:"
-   print  newdata
+   print ("newdata:")
+   print ( newdata)
    return list(map(str,newdata))
 
 def atEnd ( runarray, endarray):
    rundata=list(map(int,runarray))
    enddata=list(map(int,endarray))
    for ii in range(6):
-     if  rundata[ii] < enddata[ii]:
-            return False
-     elif  rundata[ii] > enddata[ii]:
+     if  rundata[ii] > enddata[ii]:
             return True
    return False
  
@@ -76,10 +80,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    status = editRunLen(args.suitename, args.increment_s, args.terminate_s)
+    canContinue = editRunLen(args.suitename, args.increment_s, args.terminate_s)
 
-    print "incrementRuntime.py end status %s" %status
-    sys.exit(status)
+    print ("incrementRuntime.py end status %s" %canContinue)
 
 
 
