@@ -144,6 +144,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
 
         inherit = LINUX
         script = """
+                 set -x
                  echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
                  i=1
                  while [[ $i -le ${PF_ENS_SIZE} ]]
@@ -164,11 +165,22 @@ export ROSE_VERSION={{ROSE_VERSION}}
                     cd $new_suite
 
                
-                   df1="PF_RUNDIR='"${rundir}"'"
-                   df2="PF_ENS_DIR='"${PF_ENS_DIR}"'"
-                   echo new suite  $new_suite
-                   echo rose suite-run --no-gcontrol --define-suite="${df1}" --define-suite="${df2}"
-                   rose suite-run --no-gcontrol --define-suite="${df1}" --define-suite="${df2}"
+                               # In early tests, used define_suite but that was insufficient when
+                               # suites are subsequently restarted.
+                               # surer is to modify the config of the suite:
+                               # so in the base suite have these xx...xx terms 
+
+                    cp rose-suite.conf rose-suite.conf_unedited
+                    sed -i -e "s|xxRUNDIRxx|${rundir}|g"  rose-suite.conf
+                    sed -i -e "s|xxENSDIRxx|${PF_ENS_DIR}|g"  rose-suite.conf
+
+        #            echo check differences are applied
+
+        #            diff rose-suite.conf_unedited rose-suite.conf
+
+                   echo "new suite  ${new_suite}"
+                   echo "rose suite-run --no-gcontrol "
+                   rose suite-run --no-gcontrol 
 
                     ((i = i + 1 )) 
                  done
