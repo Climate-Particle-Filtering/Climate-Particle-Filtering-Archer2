@@ -13,6 +13,8 @@ def editRunLen(suitename, incrementRun, endRun):
 
     shutil.move(confFile, oldFile)
 
+    print (" inc:%s"%incrementRun)
+    print (" terminate:%s"%endRun)
     
 
     fout=open(confFile,"w")

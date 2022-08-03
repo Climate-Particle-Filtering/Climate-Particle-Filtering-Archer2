@@ -34,3 +34,51 @@
 2022-07-26 17:26:58,069 - tool - DEBUG - Logging configured
 2022-07-26 17:26:58,071 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
 2022-07-26 17:26:58,166 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pfdir%22%3A%22fred%22%7D%5D%7D HTTP/1.1" 200 1423
+2022-08-02 13:56:22,050 - tool - DEBUG - Logging configured
+2022-08-02 13:56:22,066 - tool - DEBUG - Logging configured
+2022-08-02 13:56:22,068 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 13:56:22,163 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pf_rose_type%22%3A%22crunRequest%22%2C%22gmdata.pf_status%22%3A%22NEW%22%2C%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS5%22%7D%5D%7D HTTP/1.1" 200 176
+2022-08-02 13:57:07,561 - tool - DEBUG - Logging configured
+2022-08-02 13:57:07,561 - tool - DEBUG - Logging configured
+2022-08-02 13:57:07,562 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 13:57:07,660 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS5%22%7D%5D%7D HTTP/1.1" 200 1540
+2022-08-02 14:07:00,066 - tool - DEBUG - Logging configured
+2022-08-02 14:07:00,066 - tool - DEBUG - Logging configured
+2022-08-02 14:07:00,073 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:07:00,162 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pf_rose_type%22%3A%22crunRequest%22%2C%22gmdata.pf_status%22%3A%22NEW%22%2C%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS5%22%7D%5D%7D HTTP/1.1" 200 1595
+2022-08-02 14:07:00,170 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:07:00,252 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "PATCH /geosmeta/activities/62e921234662eff2adca46d6 HTTP/1.1" 200 412
+2022-08-02 14:07:00,259 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:07:00,343 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "PATCH /geosmeta/activities/62e921234662eff2adca46d7 HTTP/1.1" 200 412
+2022-08-02 14:13:06,880 - tool - DEBUG - Logging configured
+2022-08-02 14:13:06,880 - tool - DEBUG - Logging configured
+2022-08-02 14:13:06,883 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:13:06,981 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS5%22%7D%5D%7D HTTP/1.1" 200 2802
+2022-08-02 14:13:20,567 - tool - DEBUG - Logging configured
+2022-08-02 14:13:20,567 - tool - DEBUG - Logging configured
+2022-08-02 14:13:20,569 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:13:20,665 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS5%22%7D%5D%7D HTTP/1.1" 200 2802
+2022-08-02 14:20:27,502 - tool - DEBUG - Logging configured
+2022-08-02 14:20:27,502 - tool - DEBUG - Logging configured
+2022-08-02 14:20:27,503 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:20:27,599 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "POST /geosmeta/activities HTTP/1.1" 201 412
+2022-08-02 14:20:27,600 - tool - DEBUG - Logging configured
+2022-08-02 14:20:27,600 - tool - DEBUG - Logging configured
+2022-08-02 14:20:27,602 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:20:27,698 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "POST /geosmeta/activities HTTP/1.1" 201 412
+2022-08-02 14:21:16,649 - tool - DEBUG - Logging configured
+2022-08-02 14:21:16,649 - tool - DEBUG - Logging configured
+2022-08-02 14:21:16,655 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:21:16,754 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pf_rose_type%22%3A%22crunRequest%22%2C%22gmdata.pf_status%22%3A%22NEW%22%2C%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS5%22%7D%5D%7D HTTP/1.1" 200 1595
+2022-08-02 14:21:16,760 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:21:16,860 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "PATCH /geosmeta/activities/62e9249b4662eff2adca46d8 HTTP/1.1" 200 412
+2022-08-02 14:21:16,867 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 14:21:16,971 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "PATCH /geosmeta/activities/62e9249b4662eff2adca46d9 HTTP/1.1" 200 412
+2022-08-02 15:50:47,523 - tool - DEBUG - Logging configured
+2022-08-02 15:50:47,523 - tool - DEBUG - Logging configured
+2022-08-02 15:50:47,525 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 15:50:47,624 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pf_rose_type%22%3A%22crunRequest%22%2C%22gmdata.pf_status%22%3A%22NEW%22%2C%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS6%22%7D%5D%7D HTTP/1.1" 200 176
+2022-08-02 15:51:17,819 - tool - DEBUG - Logging configured
+2022-08-02 15:51:17,819 - tool - DEBUG - Logging configured
+2022-08-02 15:51:17,821 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.geos.ed.ac.uk:443
+2022-08-02 15:51:17,906 - urllib3.connectionpool - DEBUG - https://www.geos.ed.ac.uk:443 "GET /geosmeta/activities?where=%7B%22%24and%22%3A%5B%7B%22project%22%3A+%22P1%22%7D%2C%7B%22gmdata.pfdir%22%3A%22%2Fwork%2Fn02%2Fshared%2Fmjmn02%2FpFilter%2Ftest%2FS6%22%7D%5D%7D HTTP/1.1" 200 1540

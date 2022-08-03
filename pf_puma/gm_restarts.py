@@ -47,20 +47,23 @@ if __name__ == "__main__":
     print("number of requests in GeosMeta %d"%len(crunlist))
     print("crunlist")
     print(crunlist)
-
+    if "(" in args.increment_s:
+        incString=args.increment_s.split("(")[1].split(")")[0]
+    if "(" in args.terminate_s:
+        endString=args.terminate_s.split("(")[1].split(")")[0]
     if args.testing or args.nDryrun:
        print ("not restarting - test run")
     else:
         cmd = "rose suite-run --restart"
         for suitename in crunlist:
              suitedir=os.path.join(os.path.expanduser('~'),"roses",suitename)
-             if os.chdir(suitedir):
-                 canContinue = editRunLen(suitename, args.increment_s, args.terminate_s)
-                 if canContinue:
+             os.chdir(suitedir)
+             canContinue = editRunLen(suitename, incString, endString)
+             if canContinue:
                      rtn=subprocess.check_output(cmd, shell=True)
                      print ("gm_restarts: suite %s restarted\n"%suitename)
                      print (rtn)
-                 else:
+             else:
                      print ("gm_restarts: suite %s reached its endtime"%suitename)
 
 
