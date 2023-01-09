@@ -8,7 +8,7 @@ The Particle Filtering software enables:
       - restart dumps are reorganised, according to criteria (e.g. goodness of fit against observation -  algorithm that is implemented by the researcher)
       - the runs then are then continued for the next while
       
-Docuemntation of the software and an example for familiarisation are being added to the wiki.
+Documentation of the software and an example for familiarisation are being added to the wiki.
 
-Currently, as for the related OptClim software, the GeosMeta service is also needed, which entail registering for that service.
+Currently, as for the related OptClim software,https://github.com/optclim/ModelOptimisation/wiki, the GeosMeta service is also needed, which entails registering for that service.
 Ask for details!
