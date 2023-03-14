@@ -71,11 +71,13 @@ export ROSE_VERSION={{ROSE_VERSION}}
     [[sendreq]]
         inherit = HPC_SERIAL
         script = """
-                 #set -x
+                 set -x
                  hostname
                  echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
                    # PF setup??
                  . {{GEOSM_SETUP_A2}}
+                 logdir=${PF_ENS_DIR}/pf.log.$$
+
                          # scan run directories to find runs needing a cloned base suite
                  if [[ -d ${PF_ENS_DIR} ]]
                  then
@@ -96,15 +98,21 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             echo reset of dumps failed
                             exit 1
                         fi
-                        echo "requesting restart" >> ${PF_ENS_DIR}/pf.log
+                        echo "requesting restart" >> $logdir
+                        ncr=$(find ${PF_ENS_DIR} -name "state.CRUN_READY" | wc -l)
+                        echo "ncr="$ncr
+                        echo "ncr="$ncr >>  $logdir
                         for j in $(find ${PF_ENS_DIR} -name "state.CRUN_READY")
                         do
+                            echo $j
+                            echo "            j:"$j   >> $logdir
                             sname=$(basename $(dirname $j))
                             echo {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname
-                            {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname
+                            {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname -C ${PF_ENS_DIR}/geosmeta.cfg
                             touch ${PF_ENS_DIR}/${sname}/"state.QUEUED"
                             rm -f ${PF_ENS_DIR}/${sname}/"state.DONE" 
-                             echo "            request for " ${sname} >> ${PF_ENS_DIR}/pf.log
+                            rm -f ${PF_ENS_DIR}/${sname}/"state.CRUN_READY" 
+                             echo "            request for " ${sname} >> $logdir
                         done
                      else
                       echo "did anything start at all?"
@@ -136,6 +144,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
 
         inherit = LINUX
         script = """
+                 set -x
                  echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
                  i=1
                  while [[ $i -le ${PF_ENS_SIZE} ]]
@@ -156,11 +165,22 @@ export ROSE_VERSION={{ROSE_VERSION}}
                     cd $new_suite
 
                
-                   df1="PF_RUNDIR='"${rundir}"'"
-                   df2="PF_ENS_DIR='"${PF_ENS_DIR}"'"
-                   echo new suite  $new_suite
-                   echo rose suite-run --no-gcontrol --define-suite="${df1}" --define-suite="${df2}"
-                   rose suite-run --no-gcontrol --define-suite="${df1}" --define-suite="${df2}"
+                               # In early tests, used define_suite but that was insufficient when
+                               # suites are subsequently restarted.
+                               # surer is to modify the config of the suite:
+                               # so in the base suite have these xx...xx terms 
+
+                    cp rose-suite.conf rose-suite.conf_unedited
+                    sed -i -e "s|xxRUNDIRxx|${rundir}|g"  rose-suite.conf
+                    sed -i -e "s|xxENSDIRxx|${PF_ENS_DIR}|g"  rose-suite.conf
+
+        #            echo check differences are applied
+
+        #            diff rose-suite.conf_unedited rose-suite.conf
+
+                   echo "new suite  ${new_suite}"
+                   echo "rose suite-run --no-gcontrol "
+                   rose suite-run --no-gcontrol 
 
                     ((i = i + 1 )) 
                  done
@@ -177,7 +197,8 @@ export ROSE_VERSION={{ROSE_VERSION}}
         inherit = LINUX
         script = """
                  . {{GEOSM_SETUP_PUMA}}
-                 {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "${PF_RUNLEN_STEP}"  "${PF_RUNLEN_END}"
+                 echo {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
+                 {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
         """
         [[[job]]]
             execution time limit = PT20M
