@@ -14,6 +14,11 @@ do
     suitelist=$(echo $suitelist $(dirname $sdirf))
 done
 
+for sdirf in $suitelist
+    mv state.DONE state.FILTERING
+
+filteredList  = pf_doFiltering.py $suitelist 
+
 # now have a space separated list, can be passed to python, or put above 
 # logic into a python script
 
@@ -27,10 +32,9 @@ echo "working on suites in directories" $suitelist
 
 for sdirf in $suitelist
 do
-    echo mv  $sdirf/"state.DONE" $sdirf/"state.CRUN_READY"
-    mv  $sdirf/"state.DONE" $sdirf/"state.CRUN_READY"
+    echo mv  $sdirf/"state.FILTERING" $sdirf/"state.CRUN_READY"
+    mv  $sdirf/"state.FILTERING" $sdirf/"state.CRUN_READY"
 done
-
 
 
 
