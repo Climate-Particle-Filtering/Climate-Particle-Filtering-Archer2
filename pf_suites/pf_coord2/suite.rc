@@ -1,0 +1,212 @@
+#!jinja2
+[cylc]
+    UTC mode = True 
+    # Timeout handlers
+    [[events]]
+        timeout = P1D
+
+[scheduling]
+    initial cycle point = now
+
+    [[dependencies]]
+        [[[R1]]]
+             graph = startclones
+        [[[PT30M]]]
+             graph = sendreq[-PT30M] => getreq => sendreq 
+        
+[runtime]
+# Root, inherited by everything
+    [[root]]
+        init-script = """
+export CYLC_VERSION={{CYLC_VERSION}}
+export ROSE_VERSION={{ROSE_VERSION}}
+"""
+        script = "rose task-run --verbose"
+        [[[events]]]
+            # Cylc has sensible defaults for event notification- only add
+            # to the entry below if you want to be notified by mail
+            mail events = submission failed, submission timeout, submission retry, retry, failed, timeout
+            submission timeout = P1D # 1 day
+        [[[environment]]]
+            ROSE_ORIG_HOST={{ ROSE_ORIG_HOST }}
+            RUNS = unset
+               # following set in suite startup command --define...
+            PF_BASE_SUITE = {{ PF_BASE_SUITE }} 
+            PF_ENS_SIZE = {{ PF_ENS_SIZE }} 
+            PF_FILTER_DIR = {{ PF_FILTER_DIR }} 
+            PF_ENS_DIR = {{ PF_ENS_DIR }} 
+            PF_RUNLEN_STEP = {{ PF_RUNLEN_STEP }} 
+            PF_RUNLEN_END = {{ PF_RUNLEN_END }} 
+            PFname=$(basename $PF_ENS_DIR )
+            PF_ENS_PREFIX = ${PFname:0:2}
+     [[HPC_ALL]] 
+        [[[directives]]]
+            --export = none
+            --account = {{ HPC_ACCOUNT }}
+        [[[job]]]
+            batch system = slurm
+        [[[remote]]]
+            host = {{ HPC_HOST }}
+            owner = {{ HPC_USER }}
+
+     [[HPC_SERIAL]]
+        inherit = None, HPC_ALL
+        [[[environment]]]
+            ROSE_TASK_N_JOBS = 1
+        [[[job]]]
+            execution time limit = PT20M
+        [[[directives]]]
+            --partition=serial
+            --qos=serial
+            --ntasks=1
+            --nodes = 1
+            --cpus-per-task = 1
+            --mem=4G
+
+    [[LINUX]]
+        [[[remote]]]
+            host = {{ ROSE_ORIG_HOST }}
+        [[[job]]]
+            batch system = background
+
+    [[sendreq]]
+        inherit = HPC_SERIAL
+        script = """
+                 set -x
+                 hostname
+                 echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
+                   # PF setup??
+                 . {{GEOSM_SETUP_A2}}
+                 logdir=${PF_ENS_DIR}/pf.log.$$
+
+                         # scan run directories to find runs needing a cloned base suite
+                 if [[ -d ${PF_ENS_DIR} ]]
+                 then
+                    nqd=$(find ${PF_ENS_DIR} -name "state.QUEUED" | wc -l)
+                    echo  "nqd" ${nqd}
+                    nrun=$(find ${PF_ENS_DIR} -name "state.RUNNING" | wc -l)
+                    echo  "nrun" ${nrun}
+                    ndone=$(find ${PF_ENS_DIR} -name "state.DONE" | wc -l)
+                    echo  "ndone" $ndone
+
+                    if [[ ${nqd} == 0 ]] &&  [[ ${nrun} == 0 ]] && [[ ${ndone} > 0 ]]
+                    then
+                               # ready to filter dumps.
+                        echo pf_reset_dumps.sh  ${PF_ENS_DIR}
+                        {{GM_A2_APP}}/pf_reset_dumps.py  ${PF_ENS_DIR} ${PF_FILTER_DIR}
+                        if [[ $? != 0 ]]
+                        then
+                            echo reset of dumps failed
+                            exit 1
+                        fi
+                        echo "requesting restart" >> $logdir
+                        ncr=$(find ${PF_ENS_DIR} -name "state.CRUN_READY" | wc -l)
+                        echo "ncr="$ncr
+                        echo "ncr="$ncr >>  $logdir
+                        for j in $(find ${PF_ENS_DIR} -name "state.CRUN_READY")
+                        do
+                            echo $j
+                            echo "            j:"$j   >> $logdir
+                            sname=$(basename $(dirname $j))
+                            echo {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname
+                            {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname -C ${PF_ENS_DIR}/geosmeta.cfg
+                            touch ${PF_ENS_DIR}/${sname}/"state.QUEUED"
+                            rm -f ${PF_ENS_DIR}/${sname}/"state.DONE" 
+                            rm -f ${PF_ENS_DIR}/${sname}/"state.CRUN_READY" 
+                             echo "            request for " ${sname} >> $logdir
+                        done
+                     else
+                      echo "did anything start at all?"
+                      echo "nQueued = $nqd"
+                      echo "nrun = $nrun"
+                      echo "ndone = $ndone"
+                      echo testing without models running?
+                     fi
+                 else
+                     echo no PF dir exists
+                     exit 1
+                 fi 
+
+        """
+        [[[job]]]
+            execution time limit = PT20M
+
+        [[[environment]]]
+            ROSE_TASK_APP    = sendreq
+            PREBUILD =
+            ROSE_TASK_N_JOBS = 1
+            ROSE_TASK_OPTIONS = --ignore-lock
+
+    [[startclones]]
+        # Run on PUMATEST to clone and start each suite for this ensemble.
+        # User responsibility: 
+        #   never trying to do more runs than we have quota/queue space for.
+        #   Can redirect model runs to taskfarm queue
+
+        inherit = LINUX
+        script = """
+                 set -x
+                 echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
+                 i=1
+                 while [[ $i -le ${PF_ENS_SIZE} ]]
+                 do
+                    new_suite=${PF_ENS_PREFIX}$(printf "%03d" $i)
+                    rundir=${PF_ENS_DIR}/${new_suite}   # archer2 directory for the run
+                    cd /home/$USER/roses
+
+                    if [[ -d $new_suite ]]
+                    then
+          # force uniqueness - might be unnecessary - consider later! Helps testing.
+          # $$ is the process number of this process. Could use _1,_2 etc
+
+                            new_suite=${new_suite}_$$
+                    fi 
+
+                    cp -r -L  $PF_BASE_SUITE  $new_suite
+                    cd $new_suite
+
+               
+                               # In early tests, used define_suite but that was insufficient when
+                               # suites are subsequently restarted.
+                               # surer is to modify the config of the suite:
+                               # so in the base suite have these xx...xx terms 
+
+                    cp rose-suite.conf rose-suite.conf_unedited
+                    sed -i -e "s|xxRUNDIRxx|${rundir}|g"  rose-suite.conf
+                    sed -i -e "s|xxENSDIRxx|${PF_ENS_DIR}|g"  rose-suite.conf
+
+        #            echo check differences are applied
+
+        #            diff rose-suite.conf_unedited rose-suite.conf
+
+                   echo "new suite  ${new_suite}"
+                   echo "rose suite-run --no-gcontrol "
+                   rose suite-run --no-gcontrol 
+
+                    ((i = i + 1 )) 
+                 done
+        """
+        [[[job]]]
+            execution time limit = PT20M
+
+        [[[environment]]]
+            ROSE_TASK_APP    = getreq
+            PREBUILD =
+            ROSE_TASK_N_JOBS = 1
+            ROSE_TASK_OPTIONS = --ignore-lock
+    [[getreq]]
+        inherit = LINUX
+        script = """
+                 . {{GEOSM_SETUP_PUMA}}
+                 echo {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
+                 {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
+        """
+        [[[job]]]
+            execution time limit = PT20M
+
+        [[[environment]]]
+            ROSE_TASK_APP    = getreq
+            PREBUILD =
+            ROSE_TASK_N_JOBS = 1
+            ROSE_TASK_OPTIONS = --ignore-lock
+
