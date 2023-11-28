@@ -7,12 +7,12 @@
 
 [scheduling]
     initial cycle point = now
-
+    
     [[dependencies]]
         [[[R1]]]
-             graph = startclones
+             graph = "startclones =>sendreq"
         [[[PT30M]]]
-             graph = sendreq[-PT30M] => getreq => sendreq 
+             graph = "sendreq[-PT30M] => sendreq"
         
 [runtime]
 # Root, inherited by everything
@@ -46,7 +46,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
         [[[job]]]
             batch system = slurm
         [[[remote]]]
-            host = {{ HPC_HOST }}
+            host = $(rose host-select archer2)
             owner = {{ HPC_USER }}
 
      [[HPC_SERIAL]]
@@ -76,7 +76,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
                  hostname
                  echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
                    # PF setup??
-                 . {{GEOSM_SETUP_A2}}
+                 module load cray-python
                  logdir=${PF_ENS_DIR}/pf.log.$$
 
                          # scan run directories to find runs needing a cloned base suite
@@ -93,7 +93,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
                     then
                                # ready to filter dumps.
                         echo pf_reset_dumps.sh  ${PF_ENS_DIR}
-                        {{GM_A2_APP}}/pf_reset_dumps.py  ${PF_ENS_DIR} ${PF_FILTER_DIR}
+                        {{PF_A2_APP}}/pf_reset_dumps.py  ${PF_ENS_DIR} ${PF_FILTER_DIR}
                         if [[ $? != 0 ]]
                         then
                             echo reset of dumps failed
@@ -108,13 +108,15 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             echo $j
                             echo "            j:"$j   >> $logdir
                             sname=$(basename $(dirname $j))
-                            echo {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname
-                            {{GM_A2_APP}}/gm_pf_request_crun.py  -d ${PF_ENS_DIR} -r $sname -C ${PF_ENS_DIR}/geosmeta.cfg
+                            cmdp="{{PF_A2_APP}}/pf_restart_list.py  '{{PF_RUNLEN_STEP}}' '{{PF_RUNLEN_END}}' $sname"
+                            echo ssh puma2 "$cmdp"
+                            ssh puma2 "$cmdp"
                             touch ${PF_ENS_DIR}/${sname}/"state.QUEUED"
                             rm -f ${PF_ENS_DIR}/${sname}/"state.DONE" 
                             rm -f ${PF_ENS_DIR}/${sname}/"state.CRUN_READY" 
-                             echo "            request for " ${sname} >> $logdir
                         done
+                 echo {{PF_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
+                 {{PF_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
                      else
                       echo "did anything start at all?"
                       echo "nQueued = $nqd"
@@ -138,7 +140,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
             ROSE_TASK_OPTIONS = --ignore-lock
 
     [[startclones]]
-        # Run on PUMATEST to clone and start each suite for this ensemble.
+        # Run on PUMA to clone and start each suite for this ensemble.
         # User responsibility: 
         #   never trying to do more runs than we have quota/queue space for.
         #   Can redirect model runs to taskfarm queue
@@ -152,7 +154,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
                  do
                     new_suite=${PF_ENS_PREFIX}$(printf "%03d" $i)
                     rundir=${PF_ENS_DIR}/${new_suite}   # archer2 directory for the run
-                    cd /home/$USER/roses
+                    cd /home/n02/n02/$USER/roses
 
                     if [[ -d $new_suite ]]
                     then
@@ -185,21 +187,6 @@ export ROSE_VERSION={{ROSE_VERSION}}
 
                     ((i = i + 1 )) 
                  done
-        """
-        [[[job]]]
-            execution time limit = PT20M
-
-        [[[environment]]]
-            ROSE_TASK_APP    = getreq
-            PREBUILD =
-            ROSE_TASK_N_JOBS = 1
-            ROSE_TASK_OPTIONS = --ignore-lock
-    [[getreq]]
-        inherit = LINUX
-        script = """
-                 . {{GEOSM_SETUP_PUMA}}
-                 echo {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
-                 {{GM_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
         """
         [[[job]]]
             execution time limit = PT20M

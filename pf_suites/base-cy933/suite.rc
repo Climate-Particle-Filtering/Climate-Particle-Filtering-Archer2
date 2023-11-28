@@ -101,7 +101,8 @@
 {% endif %}
 {{ 'fcm_make_ocean => fcm_make2_ocean' + (' => recon' if RECON else ' => coupled' if RUN else '') if BUILD_OCEAN else '' }}
 {{ FCMUM_GRAPH + (' => recon' if RECON else ' => coupled' if RUN else '') if BUILD_UM else '' }}
-{{ 'fcm_make_drivers => fcm_make2_drivers' + (' => coupled' if RUN else '') if BUILD_DRIVERS else '' }}
+{{ 'pf_reuse' + (' => recon' if RECON else ' => pf_prerun => coupled => pf_postrun' if RUN else ' => pf_prerun  => pf_postrun') if PF_REUSE_BUILD else '' }}
+{{ 'fcm_make_drivers => fcm_make2_drivers' + (' coupled' if RUN else '') if BUILD_DRIVERS else '' }}
 {{ 'install_ancil => recon ' if RECON else ('install_ancil => coupled' if RUN else '')}}
 {% if RUN %}
   {{ 'recon => coupled' if RECON else '' }}
@@ -115,7 +116,7 @@
         [[[ {{FMT}} ]]]
             graph = """
 {% if RUN %}
-coupled[-{{FMT}}] => coupled {{ '=> \\' if POSTPROC or HOUSEKEEP else '' }}
+pf_postrun[-{{FMT}}] => pf_prerun => coupled => pf_postrun {{ '=> \\' if POSTPROC or HOUSEKEEP else '' }}
   {% if POSTPROC %}
 POSTPROC_GROUP{{ ':succeed-all => \\' if PPTRANSFER or HOUSEKEEP else '' }}
     {% if PPTRANSFER %}
@@ -190,7 +191,10 @@ POSTPROC_GROUP:succeed-all => archive_integrity
             CICE_BLKY  = {{CICE_BLKY}}
             CICE_MAXBK = {{CICE_MAXBK}}
             UMVN = 11.3
-                        
+            
+            PF_ENS_DIR = {{PF_ENS_DIR}}                  
+            PF_RUNDIR = {{ PF_RUNDIR }}                  
+            PF_REUSE_SHARE = {{PF_REUSE_SHARE}}                  
         [[[events]]]
             # All events now handled by cylc. Uncomment one or more of the below
             # if you want to move away from the default values:
@@ -409,6 +413,60 @@ POSTPROC_GROUP:succeed-all => archive_integrity
             ROSE_TASK_APP = postproc
         [[[events]]]
             mail events = failed, execution timeout
+
+    [[pf_reuse]]
+        inherit = None, HPC_SERIAL
+        script = """
+             echo pf_reuse RUNDIR  ${PF_RUNDIR}
+             ln -s $(dirname $CYLC_SUITE_SHARE_DIR) ${PF_RUNDIR}/cylc_link
+             echo "here copy {{PF_REUSE_SHARE}} "
+             echo CYLC_SUITE_SHARE_DIR $CYLC_SUITE_SHARE_DIR
+             ls -l $CYLC_SUITE_SHARE_DIR
+             echo rsync -rt {{PF_REUSE_SHARE}}/fcm_make_um  $CYLC_SUITE_SHARE_DIR
+             rsync -rt {{PF_REUSE_SHARE}}/fcm_make_um  $CYLC_SUITE_SHARE_DIR
+             echo rsync -rt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
+             rsync -rt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
+             echo rsync -rt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
+             rsync -rt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
+             touch ${PF_RUNDIR}/"REUSING.EXES"
+        """
+        [[[job]]]
+            execution time limit = PT10M
+    [[pf_prerun]]
+        inherit = None, HPC_SERIAL
+        script = """
+             echo pf_prerun RUNDIR  ${PF_RUNDIR}
+             touch ${PF_RUNDIR}/"state.RUNNING"
+             rm -f ${PF_RUNDIR}/"state.QUEUED"
+        """
+        [[[job]]]
+            execution time limit = PT10M
+
+    [[pf_postrun]]
+        inherit = None, HPC_SERIAL
+        script = """
+             {{PF_POSTRUN}} ${PF_RUNDIR} 
+                  # expect this to generate csv or json according to what the 
+                  # filtering needs and put it in ${PF_RUNDIR}.
+                  # return 0 if ok
+             if [[ $?  -eq 0 ]] 
+             then
+
+                  # order below does matter. 
+                  # make DONE then remove RUNNING
+                  # If inverted then could drop a run if polling job is unlucky.
+                  # this order means worst case is lose a polling interval.
+
+                  echo touch ${PF_RUNDIR}/"state.DONE" and rm state.RUNNING
+                  touch ${PF_RUNDIR}/"state.DONE"
+             else
+                  echo recognised failed state, touch state.FAILED.
+                  touch ${PF_RUNDIR}/"state.FAILED"
+             fi
+             rm -f ${PF_RUNDIR}/"state.RUNNING"
+         """
+        [[[job]]]
+            execution time limit = PT10M
 
     [[housekeeping]]
     inherit = None, HOUSEKEEP_RESOURCE
