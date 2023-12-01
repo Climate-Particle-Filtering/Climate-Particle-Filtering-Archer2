@@ -103,17 +103,22 @@ export ROSE_VERSION={{ROSE_VERSION}}
                         ncr=$(find ${PF_ENS_DIR} -name "state.CRUN_READY" | wc -l)
                         echo "ncr="$ncr
                         echo "ncr="$ncr >>  $logdir
+
+                        rls='{{PF_RUNLEN_STEP}}'
+                        rlsb=${rls//\(/\'}
+                        rlsf=${rlsb//\)/\'}
+
+                        rle='{{PF_RUNLEN_END}}'
+                        rleb=${rle//\(/\'}
+                        rlef=${rleb//\)/\'}
+
                         for j in $(find ${PF_ENS_DIR} -name "state.CRUN_READY")
                         do
                             echo $j
                             echo "            j:"$j   >> $logdir
                             sname=$(basename $(dirname $j))
 
-                            rls='{{PF_RUNLEN_STEP}}' '{{PF_RUNLEN_END}}'
-                            rlsb=${rls//\(/\'}
-                            rlsf=${rlsb//\)/\'}
-
-                            cmdp={{PF_PUMA_APP}}/puma2_restart.sh  "$rlsf $sname"
+                            cmdp={{PF_PUMA_APP}}/puma2_restart.sh  "$rlsf  $rlef $sname"
                             
                             echo ssh puma2 "$cmdp"
                             ssh puma2 "$cmdp"
