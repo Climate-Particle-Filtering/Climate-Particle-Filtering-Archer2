@@ -108,7 +108,13 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             echo $j
                             echo "            j:"$j   >> $logdir
                             sname=$(basename $(dirname $j))
-                            cmdp="{{PF_PUMA_APP}}/pf_restart_list.sh  '{{PF_RUNLEN_STEP}}' '{{PF_RUNLEN_END}}' $sname"
+
+                            rls='{{PF_RUNLEN_STEP}}' '{{PF_RUNLEN_END}}'
+                            rlsb=${rls//\(/\'}
+                            rlsf=${rlsb//\)/\'}
+
+                            cmdp={{PF_PUMA_APP}}/puma2_restart.sh  "$rlsf $sname"
+                            
                             echo ssh puma2 "$cmdp"
                             ssh puma2 "$cmdp"
                             touch ${PF_ENS_DIR}/${sname}/"state.QUEUED"
