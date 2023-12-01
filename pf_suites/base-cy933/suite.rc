@@ -417,24 +417,26 @@ POSTPROC_GROUP:succeed-all => archive_integrity
     [[pf_reuse]]
         inherit = None, HPC_SERIAL
         script = """
+             # called from initial and then from subsequent restart runs
              echo pf_reuse RUNDIR  ${PF_RUNDIR}
-             ln -s $(dirname $CYLC_SUITE_SHARE_DIR) ${PF_RUNDIR}/cylc_link
-             echo "here copy {{PF_REUSE_SHARE}} "
+             echo " rsync from  {{PF_REUSE_SHARE}} "
              echo CYLC_SUITE_SHARE_DIR $CYLC_SUITE_SHARE_DIR
              ls -l $CYLC_SUITE_SHARE_DIR
-             echo rsync -rt {{PF_REUSE_SHARE}}/fcm_make_um  $CYLC_SUITE_SHARE_DIR
-             rsync -rt {{PF_REUSE_SHARE}}/fcm_make_um  $CYLC_SUITE_SHARE_DIR
-             echo rsync -rt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
-             rsync -rt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
-             echo rsync -rt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
-             rsync -rt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
+             echo rsync -lrt {{PF_REUSE_SHARE}}/fcm_make_um  $CYLC_SUITE_SHARE_DIR
+             rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_um  $CYLC_SUITE_SHARE_DIR
+             echo rsync -lrt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
+             rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
+             echo rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
+             rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
+             ln -s $(dirname $CYLC_SUITE_SHARE_DIR) ${PF_RUNDIR}/cylc_link
              touch ${PF_RUNDIR}/"REUSING.EXES"
         """
         [[[job]]]
-            execution time limit = PT10M
+            execution time limit = PT60M
     [[pf_prerun]]
         inherit = None, HPC_SERIAL
         script = """
+             # called from initial and then from subsequent restart runs
              echo pf_prerun RUNDIR  ${PF_RUNDIR}
              touch ${PF_RUNDIR}/"state.RUNNING"
              rm -f ${PF_RUNDIR}/"state.QUEUED"

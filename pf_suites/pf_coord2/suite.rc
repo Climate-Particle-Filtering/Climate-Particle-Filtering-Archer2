@@ -11,8 +11,8 @@
     [[dependencies]]
         [[[R1]]]
              graph = "startclones =>sendreq"
-        [[[PT30M]]]
-             graph = "sendreq[-PT30M] => sendreq"
+        [[[PT20M]]]
+             graph = "sendreq[-PT20M] => sendreq"
         
 [runtime]
 # Root, inherited by everything
@@ -73,8 +73,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
         inherit = HPC_SERIAL
         script = """
                  set -x
-                 hostname
-                 echo ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}
+                 echo "ens dir ${PF_ENS_DIR} with prefix ${PF_ENS_PREFIX} for size ${PF_ENS_SIZE}"
                    # PF setup??
                  module load cray-python
                  logdir=${PF_ENS_DIR}/pf.log.$$
@@ -92,7 +91,8 @@ export ROSE_VERSION={{ROSE_VERSION}}
                     if [[ ${nqd} == 0 ]] &&  [[ ${nrun} == 0 ]] && [[ ${ndone} > 0 ]]
                     then
                                # ready to filter dumps.
-                        echo pf_reset_dumps.sh  ${PF_ENS_DIR}
+                        cd ${PF_ENS_DIR}
+                        echo pf_reset_dumps.py  ${PF_ENS_DIR}  ${PF_FILTER_DIR}
                         {{PF_A2_APP}}/pf_reset_dumps.py  ${PF_ENS_DIR} ${PF_FILTER_DIR}
                         if [[ $? != 0 ]]
                         then
@@ -108,24 +108,22 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             echo $j
                             echo "            j:"$j   >> $logdir
                             sname=$(basename $(dirname $j))
-                            cmdp="{{PF_A2_APP}}/pf_restart_list.py  '{{PF_RUNLEN_STEP}}' '{{PF_RUNLEN_END}}' $sname"
+                            cmdp="{{PF_PUMA_APP}}/pf_restart_list.sh  '{{PF_RUNLEN_STEP}}' '{{PF_RUNLEN_END}}' $sname"
                             echo ssh puma2 "$cmdp"
                             ssh puma2 "$cmdp"
                             touch ${PF_ENS_DIR}/${sname}/"state.QUEUED"
                             rm -f ${PF_ENS_DIR}/${sname}/"state.DONE" 
                             rm -f ${PF_ENS_DIR}/${sname}/"state.CRUN_READY" 
                         done
-                 echo {{PF_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
-                 {{PF_PUMA_APP}}/gm_restarts.py  {{PF_ENS_DIR}} "{{PF_RUNLEN_STEP}}"  "{{PF_RUNLEN_END}}"
                      else
                       echo "did anything start at all?"
                       echo "nQueued = $nqd"
                       echo "nrun = $nrun"
                       echo "ndone = $ndone"
-                      echo testing without models running?
+                      echo " no models running?"
                      fi
                  else
-                     echo no PF dir exists
+                     echo "no PF dir exists"
                      exit 1
                  fi 
 
