@@ -118,7 +118,7 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             echo "            j:"$j   >> $logdir
                             sname=$(basename $(dirname $j))
 
-                            cmdp={{PF_PUMA_APP}}/puma2_restart.sh  "$rlsf  $rlef $sname"
+                            cmdp=$(echo {{PF_PUMA_APP}}/pf_restart_list.py  $rlsf  $rlef $sname)
                             
                             echo ssh puma2 "$cmdp"
                             ssh puma2 "$cmdp"
