@@ -81,17 +81,15 @@ export ROSE_VERSION={{ROSE_VERSION}}
                          # scan run directories to find runs needing a cloned base suite
                  if [[ -d ${PF_ENS_DIR} ]]
                  then
-                    nqd=$(find ${PF_ENS_DIR} -name "state.QUEUED" | wc -l)
-                    echo  "nqd" ${nqd}
-                    nrun=$(find ${PF_ENS_DIR} -name "state.RUNNING" | wc -l)
-                    echo  "nrun" ${nrun}
-                    ndone=$(find ${PF_ENS_DIR} -name "state.DONE" | wc -l)
-                    echo  "ndone" $ndone
-
-                    if [[ ${nqd} == 0 ]] &&  [[ ${nrun} == 0 ]] && [[ ${ndone} > 0 ]]
+                    cd ${PF_ENS_DIR}
+                    
+                    if [[ -f  "WAIT_A_CYCLE" ]]
                     then
+                           # we are ready to filter but were waitign to let model suites close 
+                           
+                        mv "WAIT_A_CYCLE" "WAITED"
+
                                # ready to filter dumps.
-                        cd ${PF_ENS_DIR}
                         echo pf_reset_dumps.py  ${PF_ENS_DIR}  ${PF_FILTER_DIR}
                         {{PF_A2_APP}}/pf_reset_dumps.py  ${PF_ENS_DIR} ${PF_FILTER_DIR}
                         if [[ $? != 0 ]]
@@ -100,6 +98,9 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             exit 1
                         fi
                         echo "requesting restart" >> $logdir
+
+                             # the filtered runs to be restarted are in state CRUN-READY
+
                         ncr=$(find ${PF_ENS_DIR} -name "state.CRUN_READY" | wc -l)
                         echo "ncr="$ncr
                         echo "ncr="$ncr >>  $logdir
@@ -127,11 +128,20 @@ export ROSE_VERSION={{ROSE_VERSION}}
                             rm -f ${PF_ENS_DIR}/${sname}/"state.CRUN_READY" 
                         done
                      else
-                      echo "did anything start at all?"
-                      echo "nQueued = $nqd"
-                      echo "nrun = $nrun"
-                      echo "ndone = $ndone"
-                      echo " no models running?"
+                        nqd=$(find ${PF_ENS_DIR} -name "state.QUEUED" | wc -l)
+                        echo  "nqd" ${nqd}
+                        nrun=$(find ${PF_ENS_DIR} -name "state.RUNNING" | wc -l)
+                        echo  "nrun" ${nrun}
+                        ndone=$(find ${PF_ENS_DIR} -name "state.DONE" | wc -l)
+                        echo  "ndone" $ndone
+
+                        if [[ ${nqd} == 0 ]] &&  [[ ${nrun} == 0 ]] && [[ ${ndone} > 0 ]]
+                        then
+                            touch "WAIT_A_CYCLE"
+                            echo "waiting for model suites to close we hope"
+                        else
+                            echo " no models running yet?"
+                        fi
                      fi
                  else
                      echo "no PF dir exists"
