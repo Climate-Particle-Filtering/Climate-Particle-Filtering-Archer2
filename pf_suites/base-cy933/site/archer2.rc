@@ -162,7 +162,7 @@
     [[INSTALL_ANCIL_RESOURCE]]
         inherit = HPC_SERIAL
         [[[job]]]
-            execution time limit = PT1M
+            execution time limit = PT10M
             
     # The resources used to run the clearout scripts
     #

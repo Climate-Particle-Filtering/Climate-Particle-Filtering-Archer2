@@ -432,7 +432,7 @@ POSTPROC_GROUP:succeed-all => archive_integrity
              touch ${PF_RUNDIR}/"REUSING.EXES"
         """
         [[[job]]]
-            execution time limit = PT60M
+            execution time limit = PT120M
     [[pf_prerun]]
         inherit = None, HPC_SERIAL
         script = """
