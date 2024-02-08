@@ -97,11 +97,13 @@
         [[[ R1 ]]]
             graph = """
 {% if POSTPROC %}
-  {{ 'fcm_make_pp => fcm_make2_pp' + (' => POSTPROC_GROUP' if RUN else '')}}
+{% if RUN %}
+  {{ ('' if PF_REUSE_BUILD else 'fcm_make_pp => fcm_make2_pp =>' )+ (' POSTPROC_GROUP')}}
+{% endif %}
 {% endif %}
 {{ 'fcm_make_ocean => fcm_make2_ocean' + (' => recon' if RECON else ' => coupled' if RUN else '') if BUILD_OCEAN else '' }}
 {{ FCMUM_GRAPH + (' => recon' if RECON else ' => coupled' if RUN else '') if BUILD_UM else '' }}
-{{ 'pf_reuse' + (' => recon' if RECON else ' => pf_prerun => coupled => pf_postrun' if RUN else ' => pf_prerun  => pf_postrun') if PF_REUSE_BUILD else '' }}
+{{ 'pf_reuse' + (' => recon' if RECON else ' => pf_prerun => coupled' if RUN else ' => pf_prerun  => pf_postrun') if PF_REUSE_BUILD else '' }}
 {{ 'fcm_make_drivers => fcm_make2_drivers' + (' coupled' if RUN else '') if BUILD_DRIVERS else '' }}
 {{ 'install_ancil => recon ' if RECON else ('install_ancil => coupled' if RUN else '')}}
 {% if RUN %}
@@ -116,7 +118,7 @@
         [[[ {{FMT}} ]]]
             graph = """
 {% if RUN %}
-pf_postrun[-{{FMT}}] => pf_prerun => coupled => pf_postrun {{ '=> \\' if POSTPROC or HOUSEKEEP else '' }}
+pf_postrun[-{{FMT}}] => pf_prerun => coupled {{ '=> \\' if POSTPROC or HOUSEKEEP else '' }}
   {% if POSTPROC %}
 POSTPROC_GROUP{{ ':succeed-all => \\' if PPTRANSFER or HOUSEKEEP else '' }}
     {% if PPTRANSFER %}
@@ -124,7 +126,7 @@ pptransfer {{'=> \\' if HOUSEKEEP else '' }}
     {% endif %}
   {% endif %}
   {% if HOUSEKEEP %}
-housekeeping
+housekeeping => pf_postrun
   {% endif %}
 
   {% if POSTPROC %}
@@ -428,6 +430,8 @@ POSTPROC_GROUP:succeed-all => archive_integrity
              rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
              echo rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
              rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
+             echo rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_pp  $CYLC_SUITE_SHARE_DIR
+             rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_pp  $CYLC_SUITE_SHARE_DIR
              ln -s $(dirname $CYLC_SUITE_SHARE_DIR) ${PF_RUNDIR}/cylc_link
              touch ${PF_RUNDIR}/"REUSING.EXES"
         """
