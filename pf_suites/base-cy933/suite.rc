@@ -118,30 +118,9 @@
         [[[ {{FMT}} ]]]
             graph = """
 {% if RUN %}
-pf_postrun[-{{FMT}}] => pf_prerun => coupled {{ '=> \\' if POSTPROC or HOUSEKEEP else '' }}
-  {% if POSTPROC %}
-POSTPROC_GROUP{{ ':succeed-all => \\' if PPTRANSFER or HOUSEKEEP else '' }}
-    {% if PPTRANSFER %}
-pptransfer {{'=> \\' if HOUSEKEEP else '' }}
-    {% endif %}
-  {% endif %}
-  {% if HOUSEKEEP %}
-pf_postrun
-  {% endif %}
-
-  {% if POSTPROC %}
-    {% if SPLIT_PP %}
-postproc_atmos[-{{FMT}}] => postproc_atmos
-postproc_cice[-{{FMT}}] => postproc_cice
-postproc_nemo[-{{FMT}}] => postproc_nemo
-    {% else %}
-postproc[-{{FMT}}] => postproc
-    {% endif %}
-    {% if PPTRANSFER %}
-pptransfer[-{{FMT}}] => pptransfer
-    {% endif %}
-  {% endif %}
+pf_postrun[-{{FMT}}] => pf_prerun => coupled
 {% endif %}
+
 
 """
 
@@ -165,7 +144,7 @@ POSTPROC_GROUP:succeed-all => archive_integrity
 
 
 {% include 'tests-graph.rc' %}
-{% include 'ukesm-graph.rc' %}
+{% include 'ukesm-pf-graph.rc' %}
 
 [runtime]
     [[root]]
@@ -430,8 +409,8 @@ POSTPROC_GROUP:succeed-all => archive_integrity
              rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_ocean  $CYLC_SUITE_SHARE_DIR
              echo rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
              rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_drivers  $CYLC_SUITE_SHARE_DIR
-             echo rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_pp  $CYLC_SUITE_SHARE_DIR
-             rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_pp  $CYLC_SUITE_SHARE_DIR
+             echo not doing rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_pp  $CYLC_SUITE_SHARE_DIR
+             #rsync -rlt {{PF_REUSE_SHARE}}/fcm_make_pp  $CYLC_SUITE_SHARE_DIR
              ln -s $(dirname $CYLC_SUITE_SHARE_DIR) ${PF_RUNDIR}/cylc_link
              touch ${PF_RUNDIR}/"REUSING.EXES"
         """
