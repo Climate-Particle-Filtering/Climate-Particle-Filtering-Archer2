@@ -126,7 +126,7 @@ pptransfer {{'=> \\' if HOUSEKEEP else '' }}
     {% endif %}
   {% endif %}
   {% if HOUSEKEEP %}
-housekeeping => pf_postrun
+pf_postrun
   {% endif %}
 
   {% if POSTPROC %}
