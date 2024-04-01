@@ -400,6 +400,8 @@ POSTPROC_GROUP:succeed-all => archive_integrity
         script = """
              # called from initial and then from subsequent restart runs
              echo pf_reuse RUNDIR  ${PF_RUNDIR}
+             # write our quota 
+             lustrequota
              echo " rsync from  {{PF_REUSE_SHARE}} "
              echo CYLC_SUITE_SHARE_DIR $CYLC_SUITE_SHARE_DIR
              ls -l $CYLC_SUITE_SHARE_DIR
