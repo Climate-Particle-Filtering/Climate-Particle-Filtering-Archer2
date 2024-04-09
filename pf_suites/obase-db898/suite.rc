@@ -55,9 +55,16 @@
         [[[ R1 ]]]
             graph = {{ BUILD_GRAPH }}
         {% endif %}
+       
+        {% set INIT_GRAPH = ' ' %}
+ 
+        {% if TASK_OPTCLIM %}
+        {% set INIT_GRAPH = 'optclim_reuse => optclim_prerun => ' %}
+        {% endif %}
+
 
         {# Set up first cycle graph #}
-        {% set INIT_GRAPH = 'install_cold => install_ancil' %}
+        {% set INIT_GRAPH = INIT_GRAPH ~ 'install_cold => install_ancil' %}
         {% set INIT_GRAPH = INIT_GRAPH ~ ' => recon' if TASK_RECON else INIT_GRAPH %}
         {% set INIT_GRAPH = INIT_GRAPH ~ ' => atmos_main' if TASK_RUN else INIT_GRAPH %}
 
@@ -91,6 +98,8 @@
 
         [[[ {{EXPT_RESUB}} ]]]
             graph = atmos_main => {{ RESUB_GRAPH }}
+        [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
+            graph = atmos_main => {{ RESUB_GRAPH }} => optclim_postrun 
 
         {% if TASK_ARCH_WALL %}
         [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
@@ -240,7 +249,7 @@
 
     [[housekeeping]]
         inherit = RUN_MAIN, HOUSEKEEP_RESOURCE
-
+%include optclim_tasks.rc
 {# Include site specific configurations #}
 {% if SITE == 'archer2' %}
 %include site/archer2.rc

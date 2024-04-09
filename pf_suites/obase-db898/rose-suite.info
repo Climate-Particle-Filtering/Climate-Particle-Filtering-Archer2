@@ -8,6 +8,6 @@ info=THIS IS THE 1.1 RELEASE OF UKESM.
     =
     =For more information about this release, please see
     =https://cms.ncas.ac.uk/unified-model/configurations/ukesm/relnotes-1.1
-owner=simontett
+owner=mikemineter
 project=UKESM
 title=UKESM1.1 AMIP, UM 13.1, Gregorian, Nudged (ERA-5)
