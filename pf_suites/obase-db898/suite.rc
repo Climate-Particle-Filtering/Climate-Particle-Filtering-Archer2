@@ -66,51 +66,28 @@
         {# Set up first cycle graph #}
         {% set INIT_GRAPH = INIT_GRAPH ~ 'install_cold => install_ancil' %}
         {% set INIT_GRAPH = INIT_GRAPH ~ ' => recon' if TASK_RECON else INIT_GRAPH %}
-        {% set INIT_GRAPH = INIT_GRAPH ~ ' => atmos_main' if TASK_RUN else INIT_GRAPH %}
-
+        {% set INIT_GRAPH = INIT_GRAPH ~ ' => atmos_main => postproc' if TASK_RUN else INIT_GRAPH %}
         [[[ R1 ]]]
             graph = {{ INIT_GRAPH }}
 
-{% if TASK_RUN %}
+        {% set RESUB_GRAPH = 'atmos_main => ' %}
 
-        {# Set up postproc #}
-        {% if TASK_POSTPROC %}
-        [[[ R1 ]]]
-            graph = fcm_make_pp => fcm_make2_pp => postproc
-        {% endif %}
-        {% if TASK_ARCHIVE_INTEGRITY is defined %}
-          {% if TASK_ARCHIVE_INTEGRITY %}
-        [[[ {{EXPT_RESUB_ARCHIVE_INTEGRITY}} ]]]
-            graph = postproc => archive_integrity => housekeeping
-        [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
-            graph = postproc => archive_integrity => housekeeping
-          {% endif %}
-        {% endif %}
+{% if TASK_RUN %}
 
 
         {# Set up cycling graph #}
-        {% set RESUB_GRAPH = '' %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'postproc => ' if TASK_POSTPROC else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'pptransfer => ' if TASK_PPTRANSFER else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'supermean => ' if TASK_SUPERMEAN else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'rose_arch_logs => ' if TASK_ARCH_LOG else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'housekeeping' %}
+        {% set RESUB_GRAPH_OPT = RESUB_GRAPH ~ ' => optclim_postrun' %}
 
-        [[[ {{EXPT_RESUB}} ]]]
-            graph = atmos_main => {{ RESUB_GRAPH }}
         [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
-            graph = atmos_main => {{ RESUB_GRAPH }} => optclim_postrun 
+            graph = {{ RESUB_GRAPH }}
 
-        {% if TASK_ARCH_WALL %}
-        [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
-            graph = atmos_main => rose_arch_wallclock => housekeeping
-        {% endif %}
-
-{# Include tests graph if required #}
-{% if TASK_TESTS %}
-%include suite-tests-graph.rc
-{% endif %}
-
+        [[[ R1/$ ]]]
+            graph = {{ RESUB_GRAPH_OPT }} 
 {% endif %}
 
 [runtime]
@@ -137,6 +114,11 @@
             {# UM version being used, required in postproc app #}
             UM_VN = 11.4
             ARCHIVE_SET = $CYLC_SUITE_NAME
+            DATASHR=$CYLC_TASK_WORK_PATH/../../../share
+            SRCSHR={{ OPT_SOURCE_SHARE }}
+            OPTCLIM_RUNDIR={{ OPTCLIM_RUNDIR }}
+            OPTCLIM_PARAM_EDIT={{ OPTCLIM_PARAM_EDIT }}
+
         [[[events]]]
             mail events = submission retry, retry, submission failed, failed, submission timeout, timeout
             submission timeout = P1D

@@ -1,6 +1,9 @@
     [[optclim_reuse]]
         inherit = None, HPC_SERIAL
         script = """
+            DATASHR=$CYLC_TASK_WORK_PATH/../../../share
+            SRCSHR={{ OPT_SOURCE_SHARE }}
+
             echo optclim_reuse:  DATASHR  ${DATASHR}
             echo optclim_reuse:  SRCSHR  ${SRCSHR}
             echo check quota
@@ -29,6 +32,8 @@
             echo "optclim_prerun:"
             echo ln -s ${CYLC_SUITE_RUN_DIR}/app ${OPTCLIM_RUNDIR}/app
             ln -s ${CYLC_SUITE_RUN_DIR}/app ${OPTCLIM_RUNDIR}/app
+            echo ln -s ${CYLC_SUITE_RUN_DIR} ${OPTCLIM_RUNDIR}/cylc_dir
+            ln -s ${CYLC_SUITE_RUN_DIR} ${OPTCLIM_RUNDIR}/cylc_dir
             cd ${OPTCLIM_RUNDIR}
 
             echo edit namelists now....
