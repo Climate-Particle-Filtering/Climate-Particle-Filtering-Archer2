@@ -72,23 +72,18 @@
 
         {% set RESUB_GRAPH = 'atmos_main => ' %}
 
-{% if TASK_RUN %}
-
-
         {# Set up cycling graph #}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'postproc => ' if TASK_POSTPROC else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'pptransfer => ' if TASK_PPTRANSFER else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'supermean => ' if TASK_SUPERMEAN else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'rose_arch_logs => ' if TASK_ARCH_LOG else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'housekeeping' %}
-        {% set RESUB_GRAPH_OPT = RESUB_GRAPH ~ ' => optclim_postrun' %}
 
-        [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
+        [[[ {{EXPT_RESUB}} ]]]
             graph = {{ RESUB_GRAPH }}
 
         [[[ R1/$ ]]]
-            graph = {{ RESUB_GRAPH_OPT }} 
-{% endif %}
+            graph = "housekeeping => optclim_postrun"
 
 [runtime]
     [[root]]
