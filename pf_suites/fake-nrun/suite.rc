@@ -41,53 +41,14 @@
     max active cycle points = 4
 
     [[special tasks]]
-        sequential = atmos_main, postproc, archive_integrity, pptransfer, supermean, housekeeping, rose_arch_logs
+        sequential = postproc, archive_integrity, pptransfer, supermean, housekeeping, rose_arch_logs
 
     [[dependencies]]
 
-        {% set INIT_GRAPH = ' ' %}
-
-        {# Set up reuse of execs graph #}
-        {% if TASK_OPTCLIM %}
-        {% set INIT_GRAPH = 'optclim_reuse => optclim_prerun => ' %}
-        {% endif %}
-
-
-        {# Set up first cycle graph #}
-        {% set INIT_GRAPH = INIT_GRAPH ~ 'install_cold => install_ancil' %}
-        {% set INIT_GRAPH = INIT_GRAPH ~ ' => recon' if TASK_RECON else INIT_GRAPH %}
-        {% set INIT_GRAPH = INIT_GRAPH ~ ' => atmos_main' if TASK_RUN else INIT_GRAPH %}
-
         [[[ R1 ]]]
-            graph = {{ INIT_GRAPH }}
+            graph = optclim_reuse => optclim_prerun => optclim_fakemodel => optclim_postrun
 
-{% if TASK_RUN %}
 
-        {# Set up cycling graph #}
-        {% set RESUB_GRAPH = '' %}
-        {% set RESUB_GRAPH = RESUB_GRAPH ~ 'postproc => ' if TASK_POSTPROC else RESUB_GRAPH %}
-        {% set RESUB_GRAPH = RESUB_GRAPH ~ 'pptransfer => ' if TASK_PPTRANSFER else RESUB_GRAPH %}
-        {% set RESUB_GRAPH = RESUB_GRAPH ~ 'supermean => ' if TASK_SUPERMEAN else RESUB_GRAPH %}
-        {% set RESUB_GRAPH = RESUB_GRAPH ~ 'rose_arch_logs => ' if TASK_ARCH_LOG else RESUB_GRAPH %}
-
-        {% set RESUB_GRAPH = RESUB_GRAPH ~ 'housekeeping' %}
-
-        [[[ {{EXPT_RESUB}} ]]]
-            graph = atmos_main => {{ RESUB_GRAPH }}
-
-        {% if TASK_ARCH_WALL %}
-        [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
-            graph = atmos_main => rose_arch_wallclock => housekeeping
-        {% endif %}
-
-{# Include tests graph if required #}
-{% if TASK_TESTS %}
-%include suite-tests-graph.rc
-{% endif %}
-
-{% endif %}
-       [[[ R1/$ ]]]
-          graph = optclim_postrun
 [runtime]
     [[root]]
         script = {{TASK_RUN_COMMAND}}
@@ -175,10 +136,6 @@
     [[recon]]
         inherit = RUN_MAIN, RCF_RESOURCE, RECONFIGURE
 
-    [[atmos_main]]
-        inherit = RUN_MAIN, ATMOS_RESOURCE, ATMOS
-        post-script = save_wallclock.sh {{EXPT_RESUB}}
-
     [[fcm_make_pp]]
         inherit = RUN_MAIN, EXTRACT_RESOURCE
     [[fcm_make2_pp]]
@@ -246,21 +203,6 @@
 %include site/niwa_cray.rc
 {% endif %}
 
-{# Include tests runtime if required #}
-{% if TASK_RUN and TASK_TESTS %}
-%include suite-tests-runtime.rc
-{% if SITE == 'archer2' %}
-%include site/archer-tests.rc
-{% elif SITE == 'meto_cray' %}
-%include site/meto_cray-tests.rc
-{% elif SITE == 'monsoon' %}
-%include site/monsoon-tests.rc
-{% elif SITE == 'nci_raijin' %}
-%include site/nci_raijin-tests.rc
-{% elif SITE == 'niwa_cray' %}
-%include site/niwa_cray-tests.rc
-{% endif %}
-{% endif %}
 
 
 [visualization]

@@ -80,4 +80,5 @@
             ROSE_TASK_N_JOBS = 1
             ROSE_TASK_OPTIONS = --ignore-lock
 
-
+   [[optclim_fakemodel]]
+        script = "sleep 10; echo Hello World!"
