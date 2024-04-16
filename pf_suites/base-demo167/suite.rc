@@ -45,18 +45,6 @@
 
     [[dependencies]]
 
-        {# Set up build graph #}
-        {% if TASK_BUILD_UM %}
-        {% set BUILD_GRAPH = 'fcm_make_um' %}
-        {% set BUILD_GRAPH = BUILD_GRAPH ~ ' => fcm_make2_um' if SITE in DBLE_FCMUM else BUILD_GRAPH %}
-        {% set BUILD_GRAPH = BUILD_GRAPH ~ ' => recon' if TASK_RECON else BUILD_GRAPH %}
-        {% set BUILD_GRAPH = BUILD_GRAPH ~ ' => atmos_main' if TASK_RUN else BUILD_GRAPH %}
-
-
-        [[[ R1 ]]]
-            graph = {{ BUILD_GRAPH }}
-        {% endif %}
-
         {% set INIT_GRAPH = ' ' %}
 
         {# Set up reuse of execs graph #}
@@ -69,31 +57,9 @@
         {% set INIT_GRAPH = INIT_GRAPH ~ 'install_cold => install_ancil' %}
         {% set INIT_GRAPH = INIT_GRAPH ~ ' => recon' if TASK_RECON else INIT_GRAPH %}
         {% set INIT_GRAPH = INIT_GRAPH ~ ' => atmos_main' if TASK_RUN else INIT_GRAPH %}
-        {% set INIT_GRAPH = INIT_GRAPH ~ ' => optclim_postrun ' if TASK_OPTCLIM else INIT_GRAPH %}
 
         [[[ R1 ]]]
             graph = {{ INIT_GRAPH }}
-
-{% if TASK_PPBUILD %}
-
-        {# Set up postproc #}
-        {% if TASK_POSTPROC %}
-        [[[ R1 ]]]
-            graph = fcm_make_pp => fcm_make2_pp => postproc
-        {% if TASK_PPTRANSFER %}
-        [[[ R1 ]]]
-            graph = fcm_make_pptransfer => fcm_make2_pptransfer => pptransfer
-        {% endif %}
-        {% endif %}
-        {% if TASK_ARCHIVE_INTEGRITY is defined %}
-          {% if TASK_ARCHIVE_INTEGRITY %}
-        [[[ {{EXPT_RESUB_ARCHIVE_INTEGRITY}} ]]]
-            graph = postproc => archive_integrity => housekeeping
-        [[[ R1//^+{{EXPT_RUNLEN}}-{{EXPT_RESUB}} ]]]
-            graph = postproc => archive_integrity => housekeeping
-          {% endif %}
-        {% endif %}
-{% endif %}
 
 {% if TASK_RUN %}
 
@@ -103,7 +69,6 @@
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'pptransfer => ' if TASK_PPTRANSFER else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'supermean => ' if TASK_SUPERMEAN else RESUB_GRAPH %}
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'rose_arch_logs => ' if TASK_ARCH_LOG else RESUB_GRAPH %}
-        {% set RESUB_GRAPH = RESUB_GRAPH ~ 'optclim_postrun => ' if TASK_OPTCLIM else RESUB_GRAPH %}
 
         {% set RESUB_GRAPH = RESUB_GRAPH ~ 'housekeeping' %}
 
@@ -264,9 +229,10 @@
 
     [[housekeeping]]
         inherit = RUN_MAIN, HOUSEKEEP_RESOURCE
-{# OptClim specific tasks - used in above graphs #}
 
+{# OptClim specific tasks - used in above graphs #}
 %include  optclim_tasks.rc
+
 {# Include site specific configurations #}
 {% if SITE == 'archer2' %}
 %include site/archer2.rc
